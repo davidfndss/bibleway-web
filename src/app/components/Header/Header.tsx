@@ -34,6 +34,20 @@ export default function Header({ book, bookIndex, chapter }: HeaderProps) {
   const versions = ["aa", "nvi", "acf"];
 
   /* ===========================
+     ABRE MODAL APENAS 1x (SESSÃO)
+  ============================ */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const alreadyOpened = sessionStorage.getItem("bible_modal_opened");
+
+    if (!alreadyOpened) {
+      setModal("book"); // modal inicial
+      sessionStorage.setItem("bible_modal_opened", "true");
+    }
+  }, []);
+
+  /* ===========================
      BUSCA DOS LIVROS
   ============================ */
   useEffect(() => {
@@ -59,13 +73,11 @@ export default function Header({ book, bookIndex, chapter }: HeaderProps) {
   }
 
   function goPrev() {
-    // Capítulo anterior no mesmo livro
     if (chapter > 1) {
       router.push(`/${version}/${book.abbrev}/${chapter - 1}`);
       return;
     }
 
-    // Livro anterior
     if (bookIndex > 0) {
       const prevBook = books[bookIndex - 1];
       const lastChapter = prevBook.chapters.length;
@@ -76,13 +88,11 @@ export default function Header({ book, bookIndex, chapter }: HeaderProps) {
   function goNext() {
     const totalChapters = book.chapters.length;
 
-    // Próximo capítulo no mesmo livro
     if (chapter < totalChapters) {
       router.push(`/${version}/${book.abbrev}/${chapter + 1}`);
       return;
     }
 
-    // Próximo livro
     if (bookIndex < books.length - 1) {
       const nextBook = books[bookIndex + 1];
       router.push(`/${version}/${nextBook.abbrev}/1`);
@@ -94,32 +104,17 @@ export default function Header({ book, bookIndex, chapter }: HeaderProps) {
   ============================ */
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Não navega se algum modal estiver aberto
       if (modal) return;
 
-      // Evita conflito se estiver digitando em input/textarea
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA"
-      ) {
-        return;
-      }
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
 
-      if (e.key === "ArrowLeft") {
-        goPrev();
-      }
-
-      if (e.key === "ArrowRight") {
-        goNext();
-      }
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
     }
 
     window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [chapter, bookIndex, books, modal]);
 
   const currentBook = selectedBook ?? book;
@@ -155,7 +150,7 @@ export default function Header({ book, bookIndex, chapter }: HeaderProps) {
           </button>
 
           <button
-            className="h-10 w-10 flex items-center justify-center border cursor-pointer rounded-md"
+            className="h-10 w-10 flex items-center justify-center border rounded-md"
             onClick={() => setModal("version")}
           >
             <i className="bi bi-book text-xl" />
@@ -229,7 +224,7 @@ export default function Header({ book, bookIndex, chapter }: HeaderProps) {
               versions.map((v) => (
                 <button
                   key={v}
-                  className={`w-full py-3 px-2 border-b border-zinc-400 cursor-pointer text-left uppercase ${
+                  className={`w-full py-3 px-2 border-b border-zinc-400 text-left uppercase ${
                     v === version ? "bg-zinc-400/50 rounded-lg" : ""
                   }`}
                   onClick={() => changeVersion(v)}
