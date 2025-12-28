@@ -41,3 +41,4 @@ yarn-error.log*
 next-env.d.ts
 
 nvi-formated.json
+.vercel
